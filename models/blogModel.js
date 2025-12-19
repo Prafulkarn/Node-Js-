@@ -7,5 +7,5 @@ const blogSchema=new schema({ //object of a class named Schema
      description:String
 })
 
-const Blog=mongoose.model("Blog",blogSchemaSchema)
+const Blog=mongoose.model("Blog",blogSchema)
 module.exports=Blog //try this again

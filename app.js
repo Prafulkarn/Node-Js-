@@ -1,5 +1,7 @@
 const express=require("express") 
 const dbSangaConnection = require("./database/connection")
+const User = require("./models/userModel")
+const Blog = require("./models/blogModel")
 const app=express()
 
 dbSangaConnection()
@@ -18,6 +20,22 @@ app.get("/about",function(req,res){  //routing by/about
         address:"About us address",
         age:23,
         name:"Praful Karn"
+    })
+})
+
+app.get("/fetch-users",async function(req,res){
+    //response to user table ma vako user data sent garnu parxa
+   const data=await User.find()
+   res.json({
+          data:data //should be the variable name or just data and do the same for blog
+   })
+})
+
+app.get("/fetch-blogs",async function(req,res){
+    const blog=await Blog.find()
+    res.json({
+        blog
+
     })
 })
 //if database is MongoDb then mongoose is your ORM tool....to check it go to your package json 
