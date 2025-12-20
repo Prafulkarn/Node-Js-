@@ -3,8 +3,10 @@ const dbSangaConnection = require("./database/connection")
 const User = require("./models/userModel")
 const Blog = require("./models/blogModel")
 const app=express()
+const bcrypt= require("bcrypt")
 
 dbSangaConnection()
+app.use(express.json()) //to make the file understand json data
 
 app.get("/",function(req,res){  /*get is a method here "/"  is route/api...can be named anything..
     request,response is a format */
@@ -39,6 +41,67 @@ app.get("/fetch-blogs",async function(req,res){
     })
 })
 //if database is MongoDb then mongoose is your ORM tool....to check it go to your package json 
+
+
+app.post("/register",async function(req,res){
+    // console.log(req) //object where info of client comes is called req
+    //console.log(req.body) //data always comes in req.body
+    const name=req.body.name
+     const email=req.body.email
+      const password=req.body.password
+      //const{name,email,password}=req.body
+      //console.log(name,email,password)
+
+    await User.create({
+         name:name,  //left column name-> right: values
+        email:email,
+        password:bcrypt.hashSync(password,10) //10 is a salting number->strenghth of encryption
+
+      })
+      res.json({
+    message:"user registered successfully"
+})
+
+      })
+app.delete("/delete/:id",async function(req,res){ //: makes it dynamic so we put id number ->req.params."id number"
+    const id=req.params.id
+     await User.findByIdAndDelete(id)
+     res.json({
+          message:"User with that id deleted successfully !!"
+     })
+})
+app.delete("/delete",async function(req,res){ 
+    const id=req.body.id
+     await User.findByIdAndDelete(id)
+     res.json({
+          message:"User with that specific id deleted successfully !!"
+     })
+})
+//Create and delete of Blog
+app.post("/registerblog",async function(req,res){
+    //console.log(req.body)
+    const title=req.body.title
+    const subtitle=req.body.subtitle
+    const description=req.body.description
+
+    await Blog.create({
+        title:title,
+        subtitle:subtitle,
+        description:description
+    })
+     res.json({
+        message:"Blog registered successfully"
+    })
+})
+app.delete("/deleteblog",async function(req,res){
+    const id=req.body.id
+    await Blog.findByIdAndDelete(id)
+    res.json({
+        message:"blog of specified Id deleted successfully"
+    })
+})
+ 
+
 
 app.listen(3000,function(){
      console.log("server has started at port 3000")
