@@ -4,6 +4,7 @@ const User = require("./models/userModel")
 const Blog = require("./models/blogModel")
 const app=express()
 const bcrypt= require("bcrypt")
+require("dotenv").config() //.env file used to write confidentail info
 
 dbSangaConnection()
 app.use(express.json()) //to make the file understand json data
@@ -31,7 +32,25 @@ app.get("/fetch-users",async function(req,res){
    res.json({
           data:data //should be the variable name or just data and do the same for blog
    })
+}) 
+// response ma user table ma vako user data find garne
+app.get("/fetchusers/:id",async function(req,res){ //: makes it dynamic so we put id number ->req.params."id number"
+    
+    const data= await User.findById(req.params.id).select(["-password","-__v"]) //password na pathaune
+     res.json({
+          data:data
+     })
 })
+
+//for blog to find by id
+app.get("/fetchblogs/:id",async function(req,res){ //: makes it dynamic so we put id number ->req.params."id number"
+    
+    const data= await Blog.findById(req.params.id).select(["-__v"]) //v na pathaune
+     res.json({
+          data:data
+     })
+})
+
 
 app.get("/fetch-blogs",async function(req,res){
     const blog=await Blog.find()
@@ -100,7 +119,85 @@ app.delete("/deleteblog",async function(req,res){
         message:"blog of specified Id deleted successfully"
     })
 })
- 
+//for update of user
+app.patch("/update-user/:id",async function(req,res){
+    const id=req.params.id
+    const name=req.body.name
+    const email=req.body.email
+    const password=req.body.password
+
+    await User.findByIdAndUpdate(id,{
+        name:name,
+        email:email,
+        password:bcrypt.hashSync(password,10)
+    })
+    res.json({
+        message:"user updated successfully"
+    })
+})
+
+//login
+app.post("/login",async function(req,res){
+    //console.log(req.body)
+    const email=req.body.email
+    const password=req.body.password
+    //const {email,password}=req.body
+    const data=await User.findOne({email:email})
+
+    //console.log(data)
+
+    if(!data){
+        res.json({
+            message:"Not registered"
+        })
+    }else{
+        const isMatched =bcrypt.compareSync(password,data.password)
+        if(isMatched){
+            res.json({
+                message:"Logged in successfully"
+            })
+
+        }else{
+            res.json({
+                message:"invalid password"
+            })
+        }
+    }
+})
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+//for update of blog
+app.patch("/update-blog/:id",async function(req,res){
+    const id=req.params.id
+    const title=req.body.title
+    const subtitle=req.body.subtitle
+    const description=req.body.description
+
+    await Blog.findByIdAndUpdate(id,{
+        title,
+        subtitle,
+        description
+    })
+    res.json({
+        message:"blog updated successfully !"
+    })
+})
+
+
 
 
 app.listen(3000,function(){
