@@ -1,21 +1,19 @@
+require("dotenv").config() //.env file used to write confidentail info
+
 const express=require("express") 
 const dbSangaConnection = require("./database/connection")
 const User = require("./models/userModel")
 const Blog = require("./models/blogModel")
 const app=express()
-const bcrypt= require("bcrypt")
-require("dotenv").config() //.env file used to write confidentail info
+const bcrypt=require("bcrypt")
+const { fetchuser, fetchuserbyid, userRegister, deletebyid, updateuser, login, homepage } = require("./controllers/userController")
+const { fetchblogbyid, fetchblogs, blogregister, deleteblog } = require("./controllers/blogController")
+
 
 dbSangaConnection()
 app.use(express.json()) //to make the file understand json data
 
-app.get("/",function(req,res){  /*get is a method here "/"  is route/api...can be named anything..
-    request,response is a format */
-    res.json({
-        name:"Home Page"
-
-    }) //if its not here no response will be sent...buffering continues
-})
+app.get("/",homepage) //if its not here no response will be sent...buffering continues
 
 
 app.get("/about",function(req,res){  //routing by/about
@@ -26,69 +24,20 @@ app.get("/about",function(req,res){  //routing by/about
     })
 })
 
-app.get("/fetch-users",async function(req,res){
-    //response to user table ma vako user data sent garnu parxa
-   const data=await User.find()
-   res.json({
-          data:data //should be the variable name or just data and do the same for blog
-   })
-}) 
+app.get("/fetch-users",fetchuser) 
 // response ma user table ma vako user data find garne
-app.get("/fetchusers/:id",async function(req,res){ //: makes it dynamic so we put id number ->req.params."id number"
-    
-    const data= await User.findById(req.params.id).select(["-password","-__v"]) //password na pathaune
-     res.json({
-          data:data
-     })
-})
+app.get("/fetchusers/:id",fetchuserbyid)
 
 //for blog to find by id
-app.get("/fetchblogs/:id",async function(req,res){ //: makes it dynamic so we put id number ->req.params."id number"
-    
-    const data= await Blog.findById(req.params.id).select(["-__v"]) //v na pathaune
-     res.json({
-          data:data
-     })
-})
+app.get("/fetchblogs/:id",fetchblogbyid)
 
 
-app.get("/fetch-blogs",async function(req,res){
-    const blog=await Blog.find()
-    res.json({
-        blog
-
-    })
-})
+app.get("/fetch-blogs",fetchblogs)
 //if database is MongoDb then mongoose is your ORM tool....to check it go to your package json 
 
 
-app.post("/register",async function(req,res){
-    // console.log(req) //object where info of client comes is called req
-    //console.log(req.body) //data always comes in req.body
-    const name=req.body.name
-     const email=req.body.email
-      const password=req.body.password
-      //const{name,email,password}=req.body
-      //console.log(name,email,password)
-
-    await User.create({
-         name:name,  //left column name-> right: values
-        email:email,
-        password:bcrypt.hashSync(password,10) //10 is a salting number->strenghth of encryption
-
-      })
-      res.json({
-    message:"user registered successfully"
-})
-
-      })
-app.delete("/delete/:id",async function(req,res){ //: makes it dynamic so we put id number ->req.params."id number"
-    const id=req.params.id
-     await User.findByIdAndDelete(id)
-     res.json({
-          message:"User with that id deleted successfully !!"
-     })
-})
+app.post("/register",userRegister)
+app.delete("/delete/:id",deletebyid)
 app.delete("/delete",async function(req,res){ 
     const id=req.body.id
      await User.findByIdAndDelete(id)
@@ -97,75 +46,15 @@ app.delete("/delete",async function(req,res){
      })
 })
 //Create and delete of Blog
-app.post("/registerblog",async function(req,res){
-    //console.log(req.body)
-    const title=req.body.title
-    const subtitle=req.body.subtitle
-    const description=req.body.description
-
-    await Blog.create({
-        title:title,
-        subtitle:subtitle,
-        description:description
-    })
-     res.json({
-        message:"Blog registered successfully"
-    })
-})
-app.delete("/deleteblog",async function(req,res){
-    const id=req.body.id
-    await Blog.findByIdAndDelete(id)
-    res.json({
-        message:"blog of specified Id deleted successfully"
-    })
-})
+app.post("/registerblog",blogregister)
+app.delete("/deleteblog",deleteblog)
 //for update of user
-app.patch("/update-user/:id",async function(req,res){
-    const id=req.params.id
-    const name=req.body.name
-    const email=req.body.email
-    const password=req.body.password
-
-    await User.findByIdAndUpdate(id,{
-        name:name,
-        email:email,
-        password:bcrypt.hashSync(password,10)
-    })
-    res.json({
-        message:"user updated successfully"
-    })
-})
+app.patch("/update-user/:id",updateuser)
 
 //login
-app.post("/login",async function(req,res){
-    //console.log(req.body)
-    const email=req.body.email
-    const password=req.body.password
-    //const {email,password}=req.body
-    const data=await User.findOne({email:email})
+app.post("/login",login)
 
-    //console.log(data)
-
-    if(!data){
-        res.json({
-            message:"Not registered"
-        })
-    }else{
-        const isMatched =bcrypt.compareSync(password,data.password)
-        if(isMatched){
-            res.json({
-                message:"Logged in successfully"
-            })
-
-        }else{
-            res.json({
-                message:"invalid password"
-            })
-        }
-    }
-})
-
-
+//jwd is a package used to generate token....Json web token
 
 
 
@@ -196,6 +85,22 @@ app.patch("/update-blog/:id",async function(req,res){
         message:"blog updated successfully !"
     })
 })
+
+//token->jwd
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
